@@ -26,17 +26,19 @@ io.on("connection", (socket) => {
     console.log(`User registered: ${userId} => ${socket.id}`);
   });
 
-  socket.on("ready-for-call", ({ userId, matchId }) => {
-    console.log(`[SIGNAL] ${userId} ready for match ${matchId}`);
-    if (!callReadyMap[matchId]) callReadyMap[matchId] = new Set();
-    callReadyMap[matchId].add(userId);
+  socket.on("ready-for-call", ({ userId, partnerId }) => {
+    const roomId = [userId, partnerId].sort().join("_"); // consistent for both users
+    console.log(`[SIGNAL] ${userId} ready for room ${roomId}`);
 
-    if (callReadyMap[matchId].size === 2) {
-      callReadyMap[matchId].forEach((uid) => {
+    if (!callReadyMap[roomId]) callReadyMap[roomId] = new Set();
+    callReadyMap[roomId].add(userId);
+
+    if (callReadyMap[roomId].size === 2) {
+      callReadyMap[roomId].forEach((uid) => {
         const sid = userSocketMap[uid];
         if (sid) {
           console.log(
-            `[SIGNAL] Both ready for match ${matchId}, notifying clients`
+            `[SIGNAL] Both ready for room ${roomId}, notifying clients`
           );
           io.to(sid).emit("both-ready");
         }
@@ -81,10 +83,10 @@ io.on("connection", (socket) => {
       console.log(`User disconnected: ${userId}`);
 
       // Cleanup callReadyMap entries
-      for (const matchId in callReadyMap) {
-        callReadyMap[matchId].delete(userId);
-        if (callReadyMap[matchId].size === 0) {
-          delete callReadyMap[matchId];
+      for (const roomId in callReadyMap) {
+        callReadyMap[roomId].delete(userId);
+        if (callReadyMap[roomId].size === 0) {
+          delete callReadyMap[roomId];
         }
       }
     }
