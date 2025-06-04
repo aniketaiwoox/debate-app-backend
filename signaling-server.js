@@ -27,6 +27,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("ready-for-call", ({ userId, matchId }) => {
+    console.log(`[SIGNAL] ${userId} ready for match ${matchId}`);
     if (!callReadyMap[matchId]) callReadyMap[matchId] = new Set();
     callReadyMap[matchId].add(userId);
 
@@ -34,6 +35,9 @@ io.on("connection", (socket) => {
       callReadyMap[matchId].forEach((uid) => {
         const sid = userSocketMap[uid];
         if (sid) {
+          console.log(
+            `[SIGNAL] Both ready for match ${matchId}, notifying clients`
+          );
           io.to(sid).emit("both-ready");
         }
       });
