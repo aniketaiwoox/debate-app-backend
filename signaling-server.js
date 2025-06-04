@@ -11,6 +11,7 @@ const io = new Server(server, {
   cors: {
     origin: ["https://aiwoox.in"],
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
